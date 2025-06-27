@@ -1,4 +1,5 @@
 const express = require("express");
+const models = require("./models");
 const UsuariosRotas = require("./routes/UsuariosRotas");
 const CategoriasRotas = require("./routes/CategoriasRotas");
 const ProdutosRotas = require("./routes/ProdutosRotas");

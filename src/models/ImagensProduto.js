@@ -2,7 +2,7 @@ const { Model, DataTypes } = require("sequelize");
 const connection = require("../config/connection");
 
 class ImagensProduto extends Model {
-    static asssociate(models) {
+    static associate(models) {
         ImagensProduto.belongsTo(models.ProdutosModel, {
             foreignKey: "product_id",
             as: "produto"
