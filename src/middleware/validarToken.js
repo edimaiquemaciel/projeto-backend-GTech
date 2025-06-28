@@ -2,6 +2,14 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 function validarToken(req, res, next) {
+ 
+    const rotasLivres = [
+        '/v1/user/token'
+    ];
+
+    if (rotasLivres.includes(req.path)) {
+        return next();
+    }
 
     const metodosProtegidos = ['POST', 'PUT', 'DELETE'];
     
@@ -26,13 +34,10 @@ function validarToken(req, res, next) {
     }
 
     try {
-        
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
         req.user = decoded;
-        
         next();
-        
+
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
             return res.status(401).json({
