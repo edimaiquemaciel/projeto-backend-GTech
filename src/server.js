@@ -1,11 +1,12 @@
 const express = require("express");
 const models = require("./models");
+require("dotenv").config();
 const UsuariosRotas = require("./routes/UsuariosRotas");
 const CategoriasRotas = require("./routes/CategoriasRotas");
 const ProdutosRotas = require("./routes/ProdutosRotas");
 
-const host = "localhost";
-const PORT = 3000;
+const host = process.env.DB_HOST || "localhost";
+const PORT = process.env.DB_PORT || 3000;
 
 const app = express();
 app.use(express.json());
