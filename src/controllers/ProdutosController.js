@@ -9,9 +9,12 @@ class ProdutosController {
   async search(req, res) {
   const { limit, page, fields, match, category_ids, 'price-range': priceRange, ...queryRest } = req.query;
 
-  let limitInt = parseInt(limit, 10);
-  if (isNaN(limitInt) || limitInt < -1) {
-    return res.status(400).json({ erro: 'O parâmetro "limit" deve ser um número inteiro maior ou igual a -1.' });
+  let limitInt = 12;
+  if (typeof limit === 'string' && limit.trim() !== '') {
+    limitInt = parseInt(limit, 10);
+    if (isNaN(limitInt) || limitInt < -1) {
+      return res.status(400).json({ erro: 'O parâmetro "limit" deve ser um número inteiro maior ou igual a -1.' });
+    }
   }
 
   const limiteFinal = limitInt === -1 ? undefined : limitInt || 12;
@@ -44,7 +47,6 @@ class ProdutosController {
     whereConditions.price = { [Op.between]: [min, max] };
   }
 
-  // Sempre incluir as associações básicas (imagens e opções)
   const includeOptions = [
     {
       model: ImagensProduto,
@@ -58,7 +60,6 @@ class ProdutosController {
     }
   ];
 
-  // Adicionar filtro por categorias se especificado
   if (category_ids) {
     const idsArray = category_ids.split(',').map(id => parseInt(id.trim(), 10));
     if (idsArray.some(isNaN)) {
@@ -73,7 +74,7 @@ class ProdutosController {
       through: { attributes: [] }
     });
   } else {
-    // Sempre incluir categorias, mesmo quando não há filtro
+
     includeOptions.push({
       model: CategoriasModel,
       as: 'categorias',
@@ -82,7 +83,6 @@ class ProdutosController {
     });
   }
 
-  // Processar filtros de opções
   for (const key in queryRest) {
     if (key.startsWith('option[')) {
       const matchOption = key.match(/option\[([0-9]+)\]/);
@@ -90,7 +90,6 @@ class ProdutosController {
         const optionId = parseInt(matchOption[1], 10);
         const values = queryRest[key].split(',').map(v => v.trim());
 
-        // Substituir a associação de opções existente por uma com filtro
         const opcaoIndex = includeOptions.findIndex(inc => inc.as === 'opcoes');
         if (opcaoIndex !== -1) {
           includeOptions[opcaoIndex] = {
@@ -133,7 +132,7 @@ class ProdutosController {
       include: includeOptions,
       limit: limiteFinal,
       offset,
-      distinct: true // Importante para contar corretamente com joins
+      distinct: true
     });
 
     const formatted = formatProducts(rows);
@@ -227,7 +226,6 @@ class ProdutosController {
       return res.status(400).json({ erro: 'Campos obrigatórios faltando: name, slug ou price' });
     }
 
-    // Criar produto
     const produto = await ProdutosModel.create({
       enabled,
       name,
@@ -238,17 +236,14 @@ class ProdutosController {
       price_with_discount
     }, { transaction });
 
-    // Garantir que o produto é uma instância do Sequelize
     if (!produto || !(produto instanceof ProdutosModel)) {
       throw new Error('Falha ao criar instância do produto');
     }
 
-    // Associar categorias
     if (Array.isArray(category_ids) && category_ids.length > 0) {
       await produto.setCategorias(category_ids, { transaction });
     }
 
-    // Salvar imagens
     const imagensCriadas = [];
     if (Array.isArray(images) && images.length > 0) {
       for (const img of images) {
@@ -265,7 +260,6 @@ class ProdutosController {
       }
     }
 
-    // Salvar opções
     const opcoesCriadas = [];
     if (Array.isArray(options) && options.length > 0) {
       for (const opt of options) {
@@ -287,7 +281,6 @@ class ProdutosController {
       }
     }
 
-    // Confirmar transação
     await transaction.commit();
 
     return res.status(201).json({
@@ -305,7 +298,7 @@ class ProdutosController {
     });
 
   } catch (error) {
-    console.error('Erro ao criar produto:', error); // Log detalhado no servidor
+    console.error('Erro ao criar produto:', error);
     await transaction.rollback();
     return res.status(500).json({
       erro: 'Erro ao criar produto',
@@ -534,7 +527,6 @@ function formatProducts(produtos) {
   return produtos.map(p => {
     const data = p.get({ plain: true });
 
-    // Formatar category_ids
     if (data.categorias) {
       data.category_ids = data.categorias.map(c => c.id);
       delete data.categorias;
@@ -542,7 +534,6 @@ function formatProducts(produtos) {
       data.category_ids = [];
     }
 
-    // Formatar images
     if (data.imagens) {
       data.images = data.imagens.map(img => ({
         id: img.id,
@@ -553,7 +544,6 @@ function formatProducts(produtos) {
       data.images = [];
     }
 
-    // Formatar options
     if (data.opcoes) {
       data.options = data.opcoes.map(opt => ({
         id: opt.id,

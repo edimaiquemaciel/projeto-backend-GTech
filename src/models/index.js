@@ -14,7 +14,6 @@ const models = {
   UsuariosModel
 };
 
-// Executar associações após todos os modelos estarem definidos
 Object.values(models).forEach((model) => {
   if (model.associate) {
     model.associate(models);

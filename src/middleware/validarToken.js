@@ -2,32 +2,39 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 function validarToken(req, res, next) {
- 
+
     const rotasLivres = [
-        '/v1/user/token'
+        '/v1/user/token',
+        '/v1/user'
     ];
 
-    if (rotasLivres.includes(req.path)) {
+    if (rotasLivres.includes(req.path) && req.method === 'POST') {
         return next();
     }
 
     const metodosProtegidos = ['POST', 'PUT', 'DELETE'];
-    
+
     if (!metodosProtegidos.includes(req.method)) {
         return next();
     }
 
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader) {
         return res.status(400).json({
             erro: "Token de acesso requerido"
         });
     }
 
+    if (!authHeader.startsWith('Bearer ')) {
+        return res.status(400).json({
+            erro: "Token de acesso requerido"
+        });
+    }
+
     const token = authHeader.split(' ')[1];
-    
-    if (!token || !authHeader.startsWith('Bearer ')) {
+
+    if (!token) {
         return res.status(400).json({
             erro: "Token de acesso requerido"
         });

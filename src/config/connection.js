@@ -3,10 +3,10 @@ require("dotenv").config();
 
 const connection = new Sequelize({
     dialect: "mysql",
-    database: process.env.DB_NAME || "projeto_backend",
-    host: process.env.DB_HOST || "localhost",
-    username: process.env.DB_USER || "root",
-    password: process.env.DB_PASS || "2607",
+    database: process.env.DB_NAME,
+    host: process.env.DB_HOST,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASS,
     port: 3306
 })
 
